@@ -5,7 +5,7 @@ import torchvision.models as models
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 import torch.nn as nn
-from models import SeparableConvNet, CombinedNet
+from models import FeatureEncoder, CombinedNet
 
 # Define transforms
 transform = transforms.Compose([
@@ -32,7 +32,7 @@ resnet50 = torch.nn.Sequential(*(list(resnet50.children())[:-2]))
 resnet50.eval()
 
 # Define SeparableConvNet and concatenate networks
-ConvNet = SeparableConvNet()
+ConvNet = FeatureEncoder()
 # Instantiate the combined model
 combined_model = CombinedNet(resnet=resnet50, separable=ConvNet)
 

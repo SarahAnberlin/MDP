@@ -105,12 +105,13 @@ class TransformerEncoderLayer(nn.Module):
 
 class TransformerEncoder(nn.Module):
     def __init__(self, num_layers=4, d_model=32, num_heads=8, d_ff=32 * 4,
-                 dropout=0.2, base_num=32):
+                 dropout=0.2, base_num=32, patch_num=14):
         super(TransformerEncoder, self).__init__()
         self.layers = nn.ModuleList(
             [TransformerEncoderLayer(d_model, num_heads, d_ff, dropout) for _ in
              range(num_layers)])
         self.num_layers = num_layers
+        self.patch_num = patch_num
         self.base_num = base_num
         self.fc1 = nn.Linear(196 * d_model, 14 * base_num)
         self.fc2 = nn.Linear(196 * d_model, 14 * base_num)
@@ -123,12 +124,13 @@ class TransformerEncoder(nn.Module):
 
     def forward(self, src, src_mask=None):
         batch_size = src.shape[0]
+        src = src.view(batch_size, self.patch_num * self.patch_num, -1)
         attention_weights = []
         for id, layer in enumerate(self.layers):
             src, attn_weights = layer(src, src_mask)
             attention_weights.append(attn_weights)
 
-        print(src.shape)
+        # print(src.shape)
         src = src.view(batch_size, -1)  # b, patch_num, d_model
         v_score = self.fc1(src)
         h_score = self.fc2(src)
@@ -142,27 +144,29 @@ class TransformerEncoder(nn.Module):
         # sqrt(patch_num)
         h_score = h_score.view(batch_size, self.base_num, 14)  # B base_num,
         # sqrt(patch_num)
-        print("Shape of h_base:", h_base.shape)
-        print("Shape of v_base:", v_base.shape)
-        print("Shape of v_score:", v_score.shape)
-        print("Shape of h_score:", h_score.shape)
+        # print("Shape of h_base:", h_base.shape)
+        # print("Shape of v_base:", v_base.shape)
+        # print("Shape of v_score:", v_score.shape)
+        # print("Shape of h_score:", h_score.shape)
         base_matrix = torch.einsum('bij,bik->bijk', h_base, v_base)
         score_matrix = torch.einsum('bij,bik->bijk', h_score, v_score)
         score_matrix = score_matrix.view(batch_size, -1, self.base_num)
         base_matrix = base_matrix.view(batch_size, self.base_num, -1)
-        print("score matrix shape", score_matrix.shape)  # B patch_num base_num
-        print("base matrix shape", base_matrix.shape)  # B base_num patch_size
+        # print("score matrix shape", score_matrix.shape)  # B patch_num base_num
+        # print("base matrix shape", base_matrix.shape)  # B base_num patch_size
         # patch_size
         normalized_score = torch.softmax(score_matrix, dim=2)
         final_image = torch.einsum('bij,bjk->bik', normalized_score,
                                    base_matrix)
-
+        final_image = final_image.view(batch_size, self.patch_num,
+                                       self.patch_num, 16, 16)
+        # print(final_image.shape)
         # 先使用 permute 将张量的维度重新排列
         # 我们需要将 (14, 14, 16, 16) 变成 (14, 16, 14, 16)
-        final_image = final_image.permute(0, 2, 1, 3)
+        final_image = final_image.permute(0, 1, 3, 2, 4)
 
         # 然后使用 reshape 将张量变成 (14*16, 14*16) 的大小
-        final_image = final_image.reshape(14 * 16, 14 * 16)
+        final_image = final_image.reshape(batch_size, 14 * 16, 14 * 16)
 
         return final_image
 
