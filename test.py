@@ -1,55 +1,55 @@
-from models import FeatureEncoder, BaseEncoder, ScoreEncoder, PatchReconstructor
+import time
 import torch
 import torch.nn as nn
-import torchvision.models as models
-import matplotlib.pyplot as plt
+import torch.optim as optim
+import torchvision
+from torchvision import transforms
+from torch.utils.data import DataLoader, random_split
+from tqdm import tqdm
+from models import MDG
+from utils import images_to_patches
+from MyDataset import MyDataset
+import argparse
+from PIL import Image
+from utils import patches_to_single_image, show_images_via_patches
 
+# Check for GPU availability
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+print('Using device:', device)
 
-def test1():
-    FE = FeatureEncoder()
-    BE = BaseEncoder()
-    SE = ScoreEncoder()
-    t = torch.randn(4, 2048, 7, 7)
-    print("Embedding...")
-    embedding = FE(t)
-    print("embedding shape:", embedding.shape)
-    print("Generating bases")
-    bases = BE(embedding)
-    print("bases shape:", bases.shape)
-    h_bases = bases[:, 0]
-    v_bases = bases[:, 1]
-    print("V bases shape:",
-          v_bases.shape)
-    scores = SE(embedding)
-    print("Generating scores")
-    print("scores shape:", scores.shape)
-    h_scores = scores[:, 0]
-    v_scores = scores[:, 1]
-    print("V scores shape:", h_scores.shape)
-    PR = PatchReconstructor()
-    res = PR(h_scores, v_scores, h_bases, v_bases)
+# Define data transformations
 
+# Load CIFAR-100 dataset
+train_dataset = torchvision.datasets.CIFAR100(root='/dataset/vfayezzhang/PythonProject/myGenerator/', train=True,
+                                              download=True, transform=None)
 
-# 打印输出形状
-def single_image_to_patches(image, num_patches=4, patch_size=(16, 16), channel_num=3):
-    """
-    将单张图像转换为若干个小patch
-    Args:
-    - image (Tensor): 输入的图像，形状为 (C, H, W)
-    - patch_size (tuple): patch 的大小，默认为 (16, 16)
+train_size = int(0.8 * len(train_dataset))
+val_size = len(train_dataset) - train_size
+train_dataset, val_dataset = random_split(train_dataset, [train_size, val_size])
 
-    Returns:
-    - patches (Tensor): 分割后的 patch，形状为 (num_patches, C, patch_size[0], patch_size[1])
-    """
-    # 添加一个维度，使得图像形状变为 (1, C, H, W)
-    image = image.unsqueeze(0)
+# Create instances of custom dataset
+train_dataset = MyDataset(train_dataset)
+val_dataset = MyDataset(val_dataset)
 
-    B = image.size(0)
-    unfolder = nn.Unfold(kernel_size=patch_size, stride=16)
-    patches = unfolder(image)
-    patches = patches.view(B, channel_num, patch_size[0] * patch_size[1], num_patches)
-    patches = patches.permute(0, 3, 1, 2)
-    patches = patches.view(num_patches, channel_num, patch_size[0], patch_size[1])
-    return patches
+batch_size = 1
+# Create data loaders
+train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, pin_memory=True)
+val_loader = DataLoader(val_dataset, batch_size=1, shuffle=False, pin_memory=True)
 
+# Initialize model and move to GPU
+model = MDG(sqrt_patch_num=2, patch_size=16, base_num=128).to(device)
+total_step = len(train_loader)
+model.load_state_dict(torch.load('D:\PythonProjects\myGenerator\weights\\v1\\122_0.1417.pth'))
+model.eval()
+for patches, images in tqdm(val_loader):
+    images = images.to(device)  # Move batch of images to GPU
+    patches = patches.to(device)  # Move patches to GPU
+    show_images_via_patches(patches.cpu().detach())
 
+    outputs = model(images)
+    show_images_via_patches(outputs.cpu().detach())
+
+    # reconstructed_image = patches_to_single_image(outputs, image_size=(3, 32, 32), patch_size=(16, 16), stride=16)
+    # reconstructed_image_pil = Image.fromarray(reconstructed_image.permute(1, 2, 0).byte().cpu().numpy())
+    # reconstructed_image_pil.show()
+    time.sleep(20)
