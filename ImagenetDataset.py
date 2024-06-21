@@ -45,7 +45,7 @@ class ImageNetDataset(Dataset):
         transform_to_tensor = transforms.ToTensor()
         image = transform_to_tensor(image)
         # print(image.shape)
-        patches = single_image_to_patches(image, patch_size=(16, 16), num_patches=4)  # Assuming
+        patches = single_image_to_patches(image, patch_size=(16, 16), num_patches=196)  # Assuming
         # image_to_patches
         # expects a batch
 
