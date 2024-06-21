@@ -44,6 +44,7 @@ class ImageNetDataset(Dataset):
         image = Image.open(img_path).convert('RGB')
 
         rescale = transforms.Compose([
+            transforms.ToTensor(),
             transforms.RandomResizedCrop(224),
             transforms.RandomHorizontalFlip(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
