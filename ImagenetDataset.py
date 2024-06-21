@@ -45,7 +45,7 @@ class ImageNetDataset(Dataset):
 
 
 if __name__ == "__main__":
-    root_dir = '/dataset/sharedir/research/ImageNet/train'  # 替换为你的ImageNet训练集路径
+    root_dir = '/dataset/sharedir/research/ImageNet/train'
     transform = transforms.Compose([
         transforms.Resize((224, 224)),
         transforms.ToTensor(),
