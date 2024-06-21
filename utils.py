@@ -66,7 +66,6 @@ def single_image_to_patches(image, num_patches=4, patch_size=(16, 16), channel_n
     Returns:
     - patches (Tensor): 分割后的 patch，形状为 (num_patches, C, patch_size[0], patch_size[1])
     """
-    # 添加一个维度，使得图像形状变为 (1, C, H, W)
     image = image.unsqueeze(0)
     B = image.size(0)
     unfolder = nn.Unfold(kernel_size=patch_size, stride=16)

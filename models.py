@@ -5,17 +5,6 @@ import matplotlib.pyplot as plt
 import torch.nn.functional as F
 
 
-def show_images_from_palette(palette_tensor):
-    b, h, w = palette_tensor.size()
-    for i in range(b):
-        image = palette_tensor[i, :, :].detach().numpy()  # 将张量转换为NumPy数组
-        plt.figure()
-        plt.imshow(image, cmap='gray')  # 假设是灰度图像，根据需要更改cmap
-        plt.title(f"Image {i + 1}")
-        plt.axis('off')  # 关闭坐标轴
-        plt.show()
-
-
 class FeedForwardNetwork(nn.Module):
     def __init__(self, d_model, d_ff):
         super(FeedForwardNetwork, self).__init__()
@@ -209,6 +198,6 @@ class MDG(nn.Module):
 
 
 if __name__ == '__main__':
-    t = torch.randn(1, 3, 224, 224)
-    mdg = MDG()
-    print(mdg(t).shape)
+    # t = torch.randn(1, 3, 224, 224)
+    # mdg = MDG()
+    # print(mdg(t).shape)

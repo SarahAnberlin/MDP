@@ -13,7 +13,7 @@ import argparse
 from ImagenetDataset import ImageNetDataset
 
 parser = argparse.ArgumentParser(description='Training parameters for the model.')
-parser.add_argument('--batch_size', type=int, default=1024, help='Batch size for training')
+parser.add_argument('--batch_size', type=int, default=128, help='Batch size for training')
 parser.add_argument('--learning_rate', type=float, default=0.001, help='Learning rate for optimizer')
 parser.add_argument('--num_epochs', type=int, default=1000, help='Number of epochs to train')
 parser.add_argument('--saving_interval', type=int, default=50, help='Interval for saving the model')
@@ -96,6 +96,7 @@ for epoch in range(num_epochs):
     if (epoch + 1) % saving_interval == 0:
         torch.save(
             model.state_dict(),
-            f'/dataset/vfayezzhang/PythonProject/myGenerator/weights/v2/{epoch + 1}_trainloss_{epoch_loss / total_step:.4f}_valloss_{avg_val_loss:.4f}.pth'
+            f'/dataset/vfayezzhang/PythonProject/myGenerator/weights/v3/{epoch + 1}_trainloss'
+            f'_{epoch_loss / total_step:.4f}_valloss_{avg_val_loss:.4f}.pth'
         )
         print(f'Model weights saved after Epoch {epoch + 1}')
