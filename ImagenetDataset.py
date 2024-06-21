@@ -54,6 +54,5 @@ if __name__ == "__main__":
     print(root_dir)
     dataset = ImageNetDataset(root_dir, transform=transform)
 
-    # 访问数据集示例
-    image, label = dataset[0]  # 获取第一张图像和其类别标签
+    image, label = dataset[0]
     print(image, label)
