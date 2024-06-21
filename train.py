@@ -31,15 +31,11 @@ print('Using device:', device)
 
 root_dir = '/dataset/sharedir/research/ImageNet/train'
 
-train_dataset = ImageNetDataset(root_dir, transform=transform)
+train_dataset = ImageNetDataset(root_dir)
 
 train_size = int(0.8 * len(train_dataset))
 val_size = len(train_dataset) - train_size
 train_dataset, val_dataset = random_split(train_dataset, [train_size, val_size])
-
-# Create instances of custom dataset
-train_dataset = MyDataset(train_dataset)
-val_dataset = MyDataset(val_dataset)
 
 # Hyperparameters
 batch_size = args.batch_size
@@ -53,7 +49,7 @@ train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, pi
 val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, pin_memory=True)
 
 # Initialize model and move to GPU
-model = MDG(sqrt_patch_num=2, patch_size=16, base_num=512).to(device)
+model = MDG(sqrt_patch_num=14, patch_size=16, base_num=512).to(device)
 total_step = len(train_loader)
 criterion = nn.L1Loss()
 optimizer = optim.Adam(model.parameters(), lr=learning_rate)
