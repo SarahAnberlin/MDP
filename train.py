@@ -10,6 +10,7 @@ from models import MDG
 from utils import images_to_patches
 from MyDataset import MyDataset
 import argparse
+from ImagenetDataset import ImageNetDataset
 
 parser = argparse.ArgumentParser(description='Training parameters for the model.')
 parser.add_argument('--batch_size', type=int, default=1024, help='Batch size for training')
@@ -27,8 +28,10 @@ print('Using device:', device)
 # Define data transformations
 
 # Load CIFAR-100 dataset
-train_dataset = torchvision.datasets.CIFAR100(root='/dataset/vfayezzhang/PythonProject/myGenerator/', train=True,
-                                              download=True, transform=None)
+
+root_dir = '/dataset/sharedir/research/ImageNet/train'
+
+train_dataset = ImageNetDataset(root_dir, transform=transform)
 
 train_size = int(0.8 * len(train_dataset))
 val_size = len(train_dataset) - train_size

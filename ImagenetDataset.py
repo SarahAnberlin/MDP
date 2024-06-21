@@ -2,7 +2,11 @@ import os
 from PIL import Image
 from torchvision import transforms
 from torch.utils.data import Dataset
-
+from torchvision import transforms
+from torch.utils.data import DataLoader, Dataset, random_split
+from tqdm import tqdm
+from models import MDG
+from utils import images_to_patches, single_image_to_patches
 
 class ImageNetDataset(Dataset):
     def __init__(self, root_dir, transform=None):
@@ -36,12 +40,26 @@ class ImageNetDataset(Dataset):
 
     def __getitem__(self, idx):
         img_path, target = self.images[idx]
-        img = Image.open(img_path).convert('RGB')
+        image = Image.open(img_path).convert('RGB')
 
-        if self.transform:
-            img = self.transform(img)
+        transform_to_tensor = transforms.ToTensor()
+        image = transform_to_tensor(image)
+        # print(image.shape)
+        patches = single_image_to_patches(image, patch_size=(16, 16), num_patches=4)  # Assuming
+        # image_to_patches
+        # expects a batch
 
-        return img, target
+        # Apply transformation
+
+        rescale = transforms.Compose([
+            transforms.RandomResizedCrop(224),
+            transforms.RandomHorizontalFlip(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        ])
+        image = rescale(image)
+        # Assuming image_to_patches also handles GPU
+        # print(patches.shape, image.shape)
+        return patches, image
 
 
 if __name__ == "__main__":
