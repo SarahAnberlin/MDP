@@ -66,8 +66,7 @@ log_json_path = '/dataset/vfayezzhang/PythonProject/myGenerator/weights/v3/log.j
 
 # Convert args to dictionary
 args_dict = vars(args)  # Converts argparse.Namespace to dictionary
-if not os.path.exists(log_json_path):
-    os.makedirs(log_json_path)
+
 # Save args dictionary to log.json
 with open(log_json_path, 'w') as f:
     json.dump(args_dict, f)
