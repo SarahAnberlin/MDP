@@ -197,7 +197,7 @@ class MDG(nn.Module):
         return reconstructed_patches
 
 
-if __name__ == '__main__':
+# if __name__ == '__main__':
     # t = torch.randn(1, 3, 224, 224)
     # mdg = MDG()
     # print(mdg(t).shape)
