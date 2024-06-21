@@ -37,8 +37,8 @@ train_size = int(0.8 * len(train_dataset))
 val_size = len(train_dataset) - train_size
 train_dataset, val_dataset = random_split(train_dataset, [train_size, val_size])
 
-print("Patches shape", train_dataset[0][0])
-print(f'image shape {train_dataset[0][1]}')
+# print("Patches shape", train_dataset[0][0])
+# print(f'image shape {train_dataset[0][1]}')
 # Hyperparameters
 batch_size = args.batch_size
 learning_rate = args.learning_rate
@@ -68,7 +68,7 @@ for epoch in range(num_epochs):
         patches = patches.to(device)  # Move patches to GPU
 
         outputs = model(images)
-        print(f'Outputs shape{outputs.shape}')
+        # print(f'Outputs shape{outputs.shape}')
         loss = criterion(outputs, patches)
         optimizer.zero_grad()
         loss.backward()
