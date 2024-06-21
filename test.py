@@ -11,7 +11,7 @@ from utils import images_to_patches
 from MyDataset import MyDataset
 import argparse
 from PIL import Image
-from utils import patches_to_single_image, show_images_via_patches
+from utils import patches_to_image, show_images_via_patches
 
 # Check for GPU availability
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -37,9 +37,9 @@ train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, pi
 val_loader = DataLoader(val_dataset, batch_size=1, shuffle=False, pin_memory=True)
 
 # Initialize model and move to GPU
-model = MDG(sqrt_patch_num=2, patch_size=16, base_num=128).to(device)
+model = MDG(sqrt_patch_num=2, patch_size=16, base_num=512).to(device)
 total_step = len(train_loader)
-model.load_state_dict(torch.load('D:\PythonProjects\myGenerator\weights\\v1\\122_0.1417.pth'))
+model.load_state_dict(torch.load('D:\PythonProjects\myGenerator\weights\\v2\\358_trainloss_0.1337_valloss_0.1385.pth'))
 model.eval()
 for patches, images in tqdm(val_loader):
     images = images.to(device)  # Move batch of images to GPU

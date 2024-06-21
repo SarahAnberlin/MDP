@@ -131,33 +131,24 @@ class PatchReconstructor(nn.Module):
         batch_size = h_scores.shape[0]
         base_matrix = torch.einsum('bkn,bkm->bkmn', h_base, v_base)
         score_matrix = torch.einsum('bkcn,bkcm->bkcnm', h_scores, v_score)
-        score_matrix = score_matrix.view(batch_size, self.base_num, 3, -1)  # batch, base_num, channel, patch_num
+        score_matrix = score_matrix.view(batch_size, self.base_num, 3, -1)
         mat_pn = score_matrix.shape[-1]
-        # print(score_matrix.shape)
-        # print(self.patch_num)
+
         if not mat_pn == self.patch_num:
             raise AssertionError(f"Patch num not matched with the "
                                  f"dimension! Expected {self.patch_num},"
                                  f" get {mat_pn} instead!")
 
-        score_matrix = score_matrix.permute(0, 3, 2, 1)  # batch, patch_num, base_num, channel
-        # print(score_matrix.shape)
+        score_matrix = score_matrix.permute(0, 3, 2, 1)
         R_list, G_list, B_list = [], [], []
         for i in range(mat_pn):
-            score = score_matrix[:, i]  # Score of every patch, [B,C,base_num]
+            score = score_matrix[:, i]
             score = F.softmax(score, dim=2)
             score = score.view(batch_size, 3, self.base_num, 1, 1)
-            R_score, G_score, B_score = score[:, 0], score[:, 1], score[:, 2]
-            R_matrix = base_matrix * R_score
-            # print(R_score.shape)
-            # print(base_matrix.shape)
-            # print(R_matrix.shape)
-            # print(R_score[0, 0, :])
-            # print(base_matrix[0, 0, 0, :])
-            # print(R_matrix[0, 0, 0, :])
-            R_matrix = torch.sum(R_matrix, dim=1)
-            G_matrix = torch.sum(base_matrix * G_score, dim=1)
-            B_matrix = torch.sum(base_matrix * B_score, dim=1)
+            R, G, B = score[:, 0], score[:, 1], score[:, 2]
+            R_matrix = torch.sum(base_matrix * R, dim=1)
+            G_matrix = torch.sum(base_matrix * G, dim=1)
+            B_matrix = torch.sum(base_matrix * B, dim=1)
             R_list.append(R_matrix)
             G_list.append(G_matrix)
             B_list.append(B_matrix)
@@ -169,48 +160,50 @@ class PatchReconstructor(nn.Module):
 
 
 class MDG(nn.Module):
-    def __init__(self, sqrt_patch_num=14, patch_size=16, base_num=512):
+    def __init__(self, sqrt_patch_num=14, patch_size=16, base_num=128):
         super().__init__()
         # Load pre-trained ResNet-50 model
         resnet50 = models.resnet50(
             pretrained=True)
         # Remove the final fully connected layer and set to evaluation mode
         self.resnet50 = torch.nn.Sequential(*(list(resnet50.children())[:-2]))
-        for param in self.resnet50.parameters():
-            param.requires_grad = False
+        # for param in self.resnet50.parameters():
+        #     param.requires_grad = False
         self.feature_encoder = FeatureEncoder(out_channel=4096)
-        self.base_encoder = BaseEncoder(patch_size=16, base_num=base_num)
-        self.score_encoder = ScoreEncoder(base_num=base_num, patch_num=sqrt_patch_num * sqrt_patch_num)
-        self.patch_reconstructor = PatchReconstructor(patch_num=sqrt_patch_num * sqrt_patch_num, base_num=base_num)
+        self.base_encoder = BaseEncoder(patch_size=16, base_num=128)
+        self.score_encoder = ScoreEncoder(patch_num=sqrt_patch_num * sqrt_patch_num)
+        self.patch_reconstructor = PatchReconstructor(patch_num=sqrt_patch_num * sqrt_patch_num, base_num=128)
 
     def forward(self, x):
         # Assuming x is your input tensor
         x = self.resnet50(x)
-        print("After resnet50, x shape:", x.shape)
+        # print("After resnet50, x shape:", x.shape)
 
         x = self.feature_encoder(x)
-        print("After feature_encoder, x shape:", x.shape)
+        # print("After feature_encoder, x shape:", x.shape)
 
         bases = self.base_encoder(x)
-        print("After base_encoder, bases shape:", bases.shape)
+        # print("After base_encoder, bases shape:", bases.shape)
 
         scores = self.score_encoder(x)
-        print("After score_encoder, scores shape:", scores.shape)
+        # print("After score_encoder, scores shape:", scores.shape)
 
         h_bases = bases[:, 0]
         v_bases = bases[:, 1]
-        print("h_bases shape:", h_bases.shape)
-        print("v_bases shape:", v_bases.shape)
+        # print(h_bases)
+        # print(v_bases)
+        # print("h_bases shape:", h_bases.shape)
+        # print("v_bases shape:", v_bases.shape)
 
         h_scores = scores[:, 0]
         v_scores = scores[:, 1]
-        print("h_scores shape:", h_scores.shape)
-        print("v_scores shape:", v_scores.shape)
+        # print("h_scores shape:", h_scores.shape)
+        # print("v_scores shape:", v_scores.shape)
 
         reconstructed_patches = self.patch_reconstructor(h_scores, v_scores,
                                                          h_bases, v_bases)
-        print("After patch_reconstructor, reconstructed_patches shape:",
-               reconstructed_patches.shape)
+        # print("After patch_reconstructor, reconstructed_patches shape:",
+        #        reconstructed_patches.shape)
 
         return reconstructed_patches
 
@@ -218,4 +211,4 @@ class MDG(nn.Module):
 if __name__ == '__main__':
     t = torch.randn(1, 3, 224, 224)
     mdg = MDG()
-    s = mdg(t).shape
+    # print(mdg(t).shape)

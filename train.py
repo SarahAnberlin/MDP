@@ -55,6 +55,7 @@ total_step = len(train_loader)
 criterion = nn.L1Loss()
 optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
+avg_val_loss = 0
 # Training loop
 for epoch in range(num_epochs):
     epoch_loss = 0
@@ -74,7 +75,6 @@ for epoch in range(num_epochs):
 
     # Print loss
     print(f'Epoch [{epoch + 1}/{num_epochs}], Loss: {epoch_loss / total_step:.4f}')
-
     # Validate
     if (epoch + 1) % validate_interval == 0:
         model.eval()
@@ -91,5 +91,8 @@ for epoch in range(num_epochs):
         print(f'Validation Loss after Epoch {epoch + 1}: {avg_val_loss:.4f}')
     # Saving weights
     if (epoch + 1) % saving_interval == 0:
-        torch.save(model.state_dict(),
-                   f'/dataset/vfayezzhang/PythonProject/myGenerator/weights/v2/{epoch + 1}_{avg_val_loss:.4f}.pth')
+        torch.save(
+            model.state_dict(),
+            f'/dataset/vfayezzhang/PythonProject/myGenerator/weights/v2/{epoch + 1}_trainloss_{epoch_loss / total_step:.4f}_valloss_{avg_val_loss:.4f}.pth'
+        )
+        print(f'Model weights saved after Epoch {epoch + 1}')

@@ -77,7 +77,7 @@ def single_image_to_patches(image, num_patches=4, patch_size=(16, 16), channel_n
     return patches
 
 
-def patches_to_single_image(patches, image_size, patch_size=(16, 16), stride=16):
+def patches_to_image(patches, patch_size=(16, 16), stride=16):
     """
     将若干个小patch还原为单张图像
     Args:
@@ -89,20 +89,18 @@ def patches_to_single_image(patches, image_size, patch_size=(16, 16), stride=16)
     Returns:
     - image (Tensor): 还原后的图像，形状为 (C, H, W)
     """
-    B, num_patches, C, patch_H, patch_W = patches.shape
-    H, W = image_size[1], image_size[2]
+    # print(patches.shape)
 
-    # 恢复patch的形状并进行转置
-    patches = patches.view(B, num_patches, C, patch_H, patch_W)
+    B, num_patches, C, patch_H, patch_W = patches.shape
+    sqrt_num_patches = int(num_patches ** 0.5)
+    H, W = sqrt_num_patches * patch_H, sqrt_num_patches * patch_W
+
     patches = patches.permute(0, 2, 3, 4, 1)
     patches = patches.view(B, C * patch_H * patch_W, num_patches)
-
     # 定义nn.Fold并还原图像
     folder = nn.Fold(output_size=(H, W), kernel_size=patch_size, stride=stride)
     image = folder(patches)
-
-    # 消除批次维度
-    image = image.squeeze(0)
+    # print(image.shape)
 
     return image
 
@@ -165,10 +163,19 @@ if __name__ == '__main__':
     image = Image.open(image_path).convert('RGB')
     image = image.resize((32, 32))  # resize为32x32像素
     image = torch.tensor(np.array(image)).permute(2, 0, 1).float()  # 将PIL图像转换为张量，并调整通道顺序
-    image = torch.stack([image, image], dim=0)
+    image = image.unsqueeze(0)
+    # image = torch.stack([image, image], dim=0)
     patches = images_to_patches(image, num_patches=4, patch_size=(16, 16), channel_num=3)
 
     patches = patches - patches.min()
     patches = patches / patches.max()
+    images = patches_to_image(patches)
+    for batch in range(images.shape[0]):
+        image = images[batch, :]
 
-    show_images_via_patches(patches)
+        to_pil = transforms.ToPILImage()
+        pil_image = to_pil(image)
+        plt.imshow(pil_image)
+        plt.axis('off')  # 关闭坐标轴
+        plt.show()
+    # show_images_via_patches(patches)
