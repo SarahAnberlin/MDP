@@ -12,6 +12,7 @@ from MyDataset import MyDataset
 import argparse
 from ImagenetDataset import ImageNetDataset
 import json
+import os
 
 parser = argparse.ArgumentParser(description='Training parameters for the model.')
 parser.add_argument('--batch_size', type=int, default=128, help='Batch size for training')
@@ -53,6 +54,10 @@ val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, pin_m
 
 # Initialize model and move to GPU
 model = MDG(sqrt_patch_num=14, patch_size=16, base_num=512).to(device)
+if torch.cuda.device_count() > 1:
+    print("Using", torch.cuda.device_count(), "GPUs!")
+    model = nn.DataParallel(model)
+
 total_step = len(train_loader)
 criterion = nn.L1Loss()
 optimizer = optim.Adam(model.parameters(), lr=learning_rate)
@@ -61,7 +66,8 @@ log_json_path = '/dataset/vfayezzhang/PythonProject/myGenerator/weights/v3/log.j
 
 # Convert args to dictionary
 args_dict = vars(args)  # Converts argparse.Namespace to dictionary
-
+if not os.path.exists(log_json_path):
+    os.makedirs(log_json_path)
 # Save args dictionary to log.json
 with open(log_json_path, 'w') as f:
     json.dump(args_dict, f)
