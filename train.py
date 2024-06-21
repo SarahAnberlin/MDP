@@ -11,6 +11,7 @@ from utils import images_to_patches
 from MyDataset import MyDataset
 import argparse
 from ImagenetDataset import ImageNetDataset
+import json
 
 parser = argparse.ArgumentParser(description='Training parameters for the model.')
 parser.add_argument('--batch_size', type=int, default=128, help='Batch size for training')
@@ -55,6 +56,15 @@ model = MDG(sqrt_patch_num=14, patch_size=16, base_num=512).to(device)
 total_step = len(train_loader)
 criterion = nn.L1Loss()
 optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+
+log_json_path = '/dataset/vfayezzhang/PythonProject/myGenerator/weights/v3/log.json'
+
+# Convert args to dictionary
+args_dict = vars(args)  # Converts argparse.Namespace to dictionary
+
+# Save args dictionary to log.json
+with open(log_json_path, 'w') as f:
+    json.dump(args_dict, f)
 
 print("Training...")
 avg_val_loss = 0
